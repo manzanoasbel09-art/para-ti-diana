@@ -52,7 +52,10 @@ def inicio():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PARA TI DIANA🌹</title>
 <script>
-  function abrirRegalo() {
+  function abrirRegalo(evento) {
+    if (evento && typeof evento.preventDefault === "function" && evento.type === "touchstart") {
+      evento.preventDefault();
+    }
     var pantalla = document.getElementById("pantalla-regalo");
     if (pantalla) {
       pantalla.style.display = "none";
@@ -570,7 +573,7 @@ def inicio():
 <body>
 
   <!-- PANTALLA INICIAL DE REGALO -->
-  <div id="pantalla-regalo" role="button" tabindex="0" onclick="abrirRegalo()" ontouchstart="abrirRegalo()">
+  <div id="pantalla-regalo" role="button" tabindex="0" onclick="abrirRegalo(event)" ontouchstart="abrirRegalo(event)">
     <div class="caja-regalo">🎁</div>
     <div class="texto-regalo">TOCA PARA ABRIR TU DETALLE</div>
   </div>
@@ -767,6 +770,8 @@ def inicio():
   ];
 
   let indiceActual = 0;
+  let reproduccionSolicitada = false;
+  let listenerListoRegistrado = false;
 
   const audio = document.getElementById("audioPrincipal");
   const botonPlay = document.getElementById("botonPlay");
@@ -788,10 +793,32 @@ def inicio():
     return minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
   }
 
-  function cargarCancion(indice, reproducir) {
+  function intentarReproducir() {
+    reproduccionSolicitada = true;
+    var promesa = audio.play();
+    if (promesa && typeof promesa.catch === "function") {
+      promesa.catch(function () {
+        if (!listenerListoRegistrado) {
+          listenerListoRegistrado = true;
+          function alEstarListo() {
+            listenerListoRegistrado = false;
+            audio.removeEventListener("canplay", alEstarListo);
+            audio.removeEventListener("loadeddata", alEstarListo);
+            if (reproduccionSolicitada && audio.paused) {
+              audio.play().catch(function () {});
+            }
+          }
+          audio.addEventListener("canplay", alEstarListo);
+          audio.addEventListener("loadeddata", alEstarListo);
+        }
+      });
+    }
+
+    function cargarCancion(indice, reproducir) {
     if (indice < 0) indice = playlist.length - 1;
     if (indice >= playlist.length) indice = 0;
     indiceActual = indice;
+    listenerListoRegistrado = false;
 
     const tema = playlist[indiceActual];
     tituloCancion.textContent = tema.titulo;
@@ -804,20 +831,25 @@ def inicio():
     totalSeg.textContent = "0:00";
 
     if (reproducir) {
-      audio.play().catch(function () {});
+      intentarReproducir();
+    } else {
+      reproduccionSolicitada = false;
     }
   }
 
   window.iniciarAudioRegalo = function () {
     if (!audio.src) {
       cargarCancion(0, true);
-    } else {
-      audio.play().catch(function () {});
+      return;
     }
+    intentarReproducir();
   };
 
   function sincronizarBotonPlay() {
     botonPlay.textContent = audio.paused ? "▶" : "❚❚";
+    if (!audio.paused) {
+      reproduccionSolicitada = false;
+    }
   }
 
   audio.addEventListener("play", sincronizarBotonPlay);
@@ -829,18 +861,19 @@ def inicio():
       return;
     }
     if (audio.paused) {
-      audio.play().catch(function () {});
+      intentarReproducir();
     } else {
+      reproduccionSolicitada = false;
       audio.pause();
     }
   });
 
   btnAnterior.addEventListener("click", function () {
-    cargarCancion(indiceActual - 1, !audio.paused);
+    cargarCancion(indiceActual - 1, !audio.paused || reproduccionSolicitada);
   });
 
   btnSiguiente.addEventListener("click", function () {
-    cargarCancion(indiceActual + 1, !audio.paused);
+    cargarCancion(indiceActual + 1, !audio.paused || reproduccionSolicitada);
   });
 
   audio.addEventListener("loadedmetadata", function () {
