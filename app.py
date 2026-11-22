@@ -1,6 +1,46 @@
-from flask import Flask
+from flask import Flask, send_from_directory, abort
+import os
 
 app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+ARCHIVOS_PERMITIDOS = {
+    "portada.png",
+    "portada2.png",
+    "portada3.png",
+    "portada4.png",
+    "portada5.png",
+    "portada6.png",
+    "portada7.jpg",
+    "portada8.png",
+    "portada9.png",
+    "portada10.png",
+    "portada11.png",
+    "cancion.mp3",
+    "cancion2.mp3",
+    "cancion3.mp3",
+    "canción4.mp3",
+    "cancion4.mp3",
+    "canción5.mp3",
+    "cancion5.mp3",
+    "cancion6.mp3",
+}
+
+
+@app.route("/<path:filename>")
+def archivos_raiz(filename):
+    if filename in ARCHIVOS_PERMITIDOS:
+        ruta_raiz = os.path.join(BASE_DIR, filename)
+        if os.path.isfile(ruta_raiz):
+            return send_from_directory(BASE_DIR, filename)
+
+        ruta_static = os.path.join(BASE_DIR, "static", filename)
+        if os.path.isfile(ruta_static):
+            return send_from_directory(os.path.join(BASE_DIR, "static"), filename)
+
+    abort(404)
+
 
 @app.route("/")
 def inicio():
@@ -542,7 +582,7 @@ def inicio():
       <button type="button" class="btn-esquina-min" id="btnMinimizar" title="Minimizar / Expandir">−</button>
     </div>
 
-    <img id="portadaActual" src="/static/portada5.png" alt="Portada de la canción" onerror="this.style.display='none'">
+    <img id="portadaActual" src="/portada5.png" alt="Portada de la canción" onerror="this.style.display='none'">
     <div class="cancion-titulo" id="tituloCancion">Con mucho amor para ti</div>
 
     <audio id="audioPrincipal" preload="auto" playsinline webkit-playsinline></audio>
@@ -653,23 +693,23 @@ def inicio():
       <h2>Ten tus florecitas que no te pude dar este año :3</h2>
       <div class="grid-fotos">
         <div class="marco-foto">
-          <img src="/static/portada7.jpg" alt="Foto 1" onerror="this.style.background='#281320'">
+          <img src="/portada7.jpg" alt="Foto 1" onerror="this.style.background='#281320'">
           <div class="pie-foto">Feliz día de las flores amarillas 21 de septiembre</div>
         </div>
         <div class="marco-foto">
-          <img src="/static/portada8.png" alt="Foto 2" onerror="this.style.background='#281320'">
+          <img src="/portada8.png" alt="Foto 2" onerror="this.style.background='#281320'">
           <div class="pie-foto">Feliz día de las flores moradas 9 de octubre</div>
         </div>
         <div class="marco-foto">
-          <img src="/static/portada9.png" alt="Foto 3" onerror="this.style.background='#281320'">
+          <img src="/portada9.png" alt="Foto 3" onerror="this.style.background='#281320'">
           <div class="pie-foto">Feliz día de las flores rojas 14 de febrero</div>
         </div>
         <div class="marco-foto">
-          <img src="/static/portada10.png" alt="Foto 4" onerror="this.style.background='#281320'">
+          <img src="/portada10.png" alt="Foto 4" onerror="this.style.background='#281320'">
           <div class="pie-foto">Feliz día de los tulipanes 13 de diciembre</div>
         </div>
         <div class="marco-foto">
-          <img src="/static/portada11.png" alt="Foto 5" onerror="this.style.background='#281320'">
+          <img src="/portada11.png" alt="Foto 5" onerror="this.style.background='#281320'">
           <div class="pie-foto">Feliz día de las flores rosadas 31 de octubre</div>
         </div>
       </div>
@@ -696,38 +736,37 @@ def inicio():
   const playlist = [
     {
       titulo: "Con mucho amor para ti",
-      audio: encodeURI("/static/canción5.mp3"),
-      portada: "/static/portada5.png"
+      audio: encodeURI("/canción5.mp3"),
+      portada: "/portada5.png"
     },
     {
       titulo: "Hecha Pa' Mí",
-      audio: encodeURI("/static/cancion.mp3"),
-      portada: "/static/portada.png"
+      audio: encodeURI("/cancion.mp3"),
+      portada: "/portada.png"
     },
     {
       titulo: "Kid Krow",
-      audio: encodeURI("/static/cancion2.mp3"),
-      portada: "/static/portada2.png"
+      audio: encodeURI("/cancion2.mp3"),
+      portada: "/portada2.png"
     },
     {
       titulo: "Am I Sinking or Am I Swimming?",
-      audio: encodeURI("/static/cancion3.mp3"),
-      portada: "/static/portada3.png"
+      audio: encodeURI("/cancion3.mp3"),
+      portada: "/portada3.png"
     },
     {
       titulo: "Wannabewithu",
-      audio: encodeURI("/static/canción4.mp3"),
-      portada: "/static/portada4.png"
+      audio: encodeURI("/canción4.mp3"),
+      portada: "/portada4.png"
     },
     {
       titulo: "Canción 6",
-      audio: encodeURI("/static/cancion6.mp3"),
-      portada: "/static/portada6.png"
+      audio: encodeURI("/cancion6.mp3"),
+      portada: "/portada6.png"
     }
   ];
 
   let indiceActual = 0;
-  let debeReproducirAlCargar = false;
 
   const audio = document.getElementById("audioPrincipal");
   const botonPlay = document.getElementById("botonPlay");
@@ -742,6 +781,41 @@ def inicio():
   const btnMinimizar = document.getElementById("btnMinimizar");
   const tiradorEsquina = document.getElementById("tiradorEsquina");
 
+  function formatearTiempo(seg) {
+    if (!isFinite(seg) || seg < 0) return "0:00";
+    const minutos = Math.floor(seg / 60);
+    const segundos = Math.floor(seg % 60);
+    return minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+  }
+
+  function cargarCancion(indice, reproducir) {
+    if (indice < 0) indice = playlist.length - 1;
+    if (indice >= playlist.length) indice = 0;
+    indiceActual = indice;
+
+    const tema = playlist[indiceActual];
+    tituloCancion.textContent = tema.titulo;
+    portadaImg.style.display = "block";
+    portadaImg.src = tema.portada;
+    audio.src = tema.audio;
+    audio.load();
+    barraRelleno.style.width = "0%";
+    actualSeg.textContent = "0:00";
+    totalSeg.textContent = "0:00";
+
+    if (reproducir) {
+      audio.play().catch(function () {});
+    }
+  }
+
+  window.iniciarAudioRegalo = function () {
+    if (!audio.src) {
+      cargarCancion(0, true);
+    } else {
+      audio.play().catch(function () {});
+    }
+  };
+
   function sincronizarBotonPlay() {
     botonPlay.textContent = audio.paused ? "▶" : "❚❚";
   }
@@ -749,214 +823,112 @@ def inicio():
   audio.addEventListener("play", sincronizarBotonPlay);
   audio.addEventListener("pause", sincronizarBotonPlay);
 
-function reproducirSeguro() {
-    const promesa = audio.play();
-    if (promesa && typeof promesa.then === "function") {
-      promesa.then(() => {
-        debeReproducirAlCargar = false;
-        sincronizarBotonPlay();
-      }).catch(() => {
-        sincronizarBotonPlay();
-      });
-    } else {
-      sincronizarBotonPlay();
-    }
-  }
-
-  window.iniciarAudioRegalo = function() {
-    debeReproducirAlCargar = true;
-    if (!audio.src || audio.src === window.location.href) {
+  botonPlay.addEventListener("click", function () {
+    if (!audio.src) {
       cargarCancion(0, true);
       return;
     }
-    reproducirSeguro();
-    setTimeout(() => {
-      if (debeReproducirAlCargar && audio.paused) {
-        reproducirSeguro();
-      }
-    }, 250);
-  };
-
-  function intentarReproduccionPendiente() {
-    if (debeReproducirAlCargar && audio.paused) {
-      reproducirSeguro();
-    }
-  }
-
-  audio.addEventListener("loadeddata", intentarReproduccionPendiente);
-  audio.addEventListener("canplay", intentarReproduccionPendiente);
-  audio.addEventListener("canplaythrough", intentarReproduccionPendiente);
-
-  function alternarMinimizado(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const estaMinimizado = reproductor.classList.toggle("minimizado");
-    btnMinimizar.textContent = estaMinimizado ? "↗" : "−";
-  }
-
-  btnMinimizar.addEventListener("pointerdown", (e) => e.stopPropagation());
-  btnMinimizar.addEventListener("click", alternarMinimizado);
-
-  function aplicarEscala(escala) {
-    const limitada = Math.max(0.8, Math.min(1.45, escala));
-    reproductor.style.setProperty("--escala-marco", limitada.toFixed(2));
-  }
-
-  let redimensionando = false;
-  let inicioResizeX = 0;
-  let escalaInicial = 1;
-
-  tiradorEsquina.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
-    redimensionando = true;
-    inicioResizeX = e.clientX;
-    escalaInicial = parseFloat(reproductor.style.getPropertyValue("--escala-marco")) || 1;
-    tiradorEsquina.setPointerCapture(e.pointerId);
-  });
-
-  tiradorEsquina.addEventListener("pointermove", (e) => {
-    if (!redimensionando) return;
-    const dx = e.clientX - inicioResizeX;
-    aplicarEscala(escalaInicial + dx / 180);
-  });
-
-  tiradorEsquina.addEventListener("pointerup", (e) => {
-    if (!redimensionando) return;
-    redimensionando = false;
-    try { tiradorEsquina.releasePointerCapture(e.pointerId); } catch (_) {}
-  });
-
-  function cargarCancion(indice, reproducir = false) {
-    indiceActual = (indice + playlist.length) % playlist.length;
-    const item = playlist[indiceActual];
-
-    audio.pause();
-    debeReproducirAlCargar = Boolean(reproducir);
-
-    tituloCancion.textContent = item.titulo;
-    portadaImg.style.display = "block";
-    portadaImg.src = item.portada;
-
-    barraRelleno.style.width = "0%";
-    actualSeg.textContent = "0:00";
-    totalSeg.textContent = "0:00";
-
-    audio.src = item.audio;
-    audio.load();
-
-    if (reproducir) {
-      reproducirSeguro();
+    if (audio.paused) {
+      audio.play().catch(function () {});
     } else {
-      sincronizarBotonPlay();
+      audio.pause();
     }
-  }
-
-  function cancionAnterior(e) {
-    if (e) e.stopPropagation();
-    cargarCancion(indiceActual - 1, true);
-  }
-
-  function siguienteCancion(e) {
-    if (e) e.stopPropagation();
-    cargarCancion(indiceActual + 1, true);
-  }
-
-  btnAnterior.addEventListener("pointerdown", (e) => e.stopPropagation());
-  btnSiguiente.addEventListener("pointerdown", (e) => e.stopPropagation());
-  botonPlay.addEventListener("pointerdown", (e) => e.stopPropagation());
-
-  btnAnterior.addEventListener("click", cancionAnterior);
-  btnSiguiente.addEventListener("click", siguienteCancion);
-  botonPlay.addEventListener("click", alternarAudio);
-
-  audio.addEventListener("ended", () => {
-    cargarCancion(indiceActual + 1, true);
   });
 
-  let arrastrando = false;
-  let inicioX = 0, inicioY = 0;
-  let posIzq = 0, posTop = 0;
-reproductor.addEventListener("pointerdown", (e) => {
-    if (
-      e.target.closest("button") ||
-      e.target.closest(".barra-tiempo") ||
-      e.target.closest("#tiradorEsquina")
-    ) return;
-
-    arrastrando = true;
-    const rect = reproductor.getBoundingClientRect();
-    posIzq = rect.left;
-    posTop = rect.top;
-    inicioX = e.clientX;
-    inicioY = e.clientY;
-
-    reproductor.style.transform = "none";
-    reproductor.style.left = posIzq + "px";
-    reproductor.style.top = posTop + "px";
-    reproductor.style.bottom = "auto";
-    reproductor.style.right = "auto";
-    reproductor.setPointerCapture(e.pointerId);
+  btnAnterior.addEventListener("click", function () {
+    cargarCancion(indiceActual - 1, !audio.paused);
   });
 
-  reproductor.addEventListener("pointermove", (e) => {
-    if (!arrastrando) return;
-    const dx = e.clientX - inicioX;
-    const dy = e.clientY - inicioY;
-
-    const maxX = window.innerWidth - reproductor.offsetWidth - 8;
-    const maxY = window.innerHeight - reproductor.offsetHeight - 8;
-
-    const nuevaX = Math.max(8, Math.min(maxX, posIzq + dx));
-    const nuevaY = Math.max(8, Math.min(maxY, posTop + dy));
-
-    reproductor.style.left = nuevaX + "px";
-    reproductor.style.top = nuevaY + "px";
+  btnSiguiente.addEventListener("click", function () {
+    cargarCancion(indiceActual + 1, !audio.paused);
   });
 
-  reproductor.addEventListener("pointerup", (e) => {
-    if (!arrastrando) return;
-    arrastrando = false;
-    try { reproductor.releasePointerCapture(e.pointerId); } catch (_) {}
-  });
-
-  function formatearTiempo(seg) {
-    if (!seg || isNaN(seg)) return "0:00";
-    const min = Math.floor(seg / 60);
-    const s = Math.floor(seg % 60);
-    return `${min}:${s < 10 ? "0" : ""}${s}`;
-  }
-
-  audio.addEventListener("loadedmetadata", () => {
+  audio.addEventListener("loadedmetadata", function () {
     totalSeg.textContent = formatearTiempo(audio.duration);
   });
 
-  audio.addEventListener("timeupdate", () => {
+  audio.addEventListener("timeupdate", function () {
     actualSeg.textContent = formatearTiempo(audio.currentTime);
-    if (audio.duration) {
+    if (audio.duration > 0) {
       barraRelleno.style.width = ((audio.currentTime / audio.duration) * 100) + "%";
     }
   });
 
-  function alternarAudio(e) {
-    if (e) e.stopPropagation();
-    if (audio.paused) {
-      debeReproducirAlCargar = false;
-      reproducirSeguro();
-    } else {
-      debeReproducirAlCargar = false;
-      audio.pause();
-      sincronizarBotonPlay();
-    }
+  audio.addEventListener("ended", function () {
+    cargarCancion(indiceActual + 1, true);
+  });
+
+  function buscarTiempo(evento) {
+    if (!audio.duration) return;
+    const rect = evento.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(Math.max((evento.clientX - rect.left) / rect.width, 0), 1);
+    audio.currentTime = ratio * audio.duration;
   }
 
-  function buscarTiempo(e) {
-    e.stopPropagation();
-    if (!audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    audio.currentTime = ratio * audio.duration;
+  if (btnMinimizar && reproductor) {
+    btnMinimizar.addEventListener("click", function (e) {
+      e.stopPropagation();
+      reproductor.classList.toggle("minimizado");
+      btnMinimizar.textContent = reproductor.classList.contains("minimizado") ? "+" : "−";
+    });
+  }
+
+  let arrastrando = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (reproductor) {
+    reproductor.addEventListener("pointerdown", function (e) {
+      if (e.target.closest("button, .tirador-esquina, .barra-tiempo")) return;
+      arrastrando = true;
+      const rect = reproductor.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      reproductor.style.left = rect.left + "px";
+      reproductor.style.top = rect.top + "px";
+      reproductor.style.bottom = "auto";
+      reproductor.style.right = "auto";
+      reproductor.setPointerCapture(e.pointerId);
+    });
+
+    reproductor.addEventListener("pointermove", function (e) {
+      if (!arrastrando) return;
+      const maxX = Math.max(0, window.innerWidth - reproductor.offsetWidth);
+      const maxY = Math.max(0, window.innerHeight - reproductor.offsetHeight);
+      const nuevaX = Math.min(Math.max(0, e.clientX - offsetX), maxX);
+      const nuevaY = Math.min(Math.max(0, e.clientY - offsetY), maxY);
+      reproductor.style.left = nuevaX + "px";
+      reproductor.style.top = nuevaY + "px";
+    });
+
+    reproductor.addEventListener("pointerup", function () {
+      arrastrando = false;
+    });
+  }
+
+  let escalando = false;
+  let inicioX = 0;
+  let escalaInicial = 1;
+
+  if (tiradorEsquina && reproductor) {
+    tiradorEsquina.addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      escalando = true;
+      inicioX = e.clientX;
+      escalaInicial = parseFloat(getComputedStyle(reproductor).getPropertyValue("--escala-marco")) || 1;
+      tiradorEsquina.setPointerCapture(e.pointerId);
+    });
+
+    tiradorEsquina.addEventListener("pointermove", function (e) {
+      if (!escalando) return;
+      const delta = (e.clientX - inicioX) / 160;
+      const nuevaEscala = Math.min(Math.max(0.75, escalaInicial + delta), 1.45);
+      reproductor.style.setProperty("--escala-marco", nuevaEscala.toFixed(2));
+    });
+
+    tiradorEsquina.addEventListener("pointerup", function () {
+      escalando = false;
+    });
   }
 
   function mostrarFlor(texto) {
