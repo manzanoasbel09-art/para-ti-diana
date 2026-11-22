@@ -572,7 +572,7 @@ def inicio():
   <!-- PANTALLA INICIAL DE REGALO -->
   <div id="pantalla-regalo" onclick="abrirRegalo()">
     <div class="caja-regalo">🎁</div>
-    <div class="texto-regalo">TOCA PARA ABRIR TU DETALLE</div>
+    <div class="texto-regalo">HECHO CON MUCHO CARIÑO PARA TI🌹</div>
   </div>
 
   <!-- REPRODUCTOR FLOTANTE -->
@@ -760,7 +760,7 @@ def inicio():
       portada: "/portada4.png"
     },
     {
-      titulo: "Canción 6",
+      titulo: "Amor de siempre",
       audio: "/cancion6.mp3",
       portada: "/portada6.png"
     }
