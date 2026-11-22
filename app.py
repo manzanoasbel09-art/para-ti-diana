@@ -52,10 +52,7 @@ def inicio():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PARA TI DIANA🌹</title>
 <script>
-  function abrirRegalo(evento) {
-    if (evento && typeof evento.preventDefault === "function" && evento.type === "touchstart") {
-      evento.preventDefault();
-    }
+  function abrirRegalo() {
     var pantalla = document.getElementById("pantalla-regalo");
     if (pantalla) {
       pantalla.style.display = "none";
@@ -573,7 +570,7 @@ def inicio():
 <body>
 
   <!-- PANTALLA INICIAL DE REGALO -->
-  <div id="pantalla-regalo" role="button" tabindex="0" onclick="abrirRegalo(event)" ontouchstart="abrirRegalo(event)">
+  <div id="pantalla-regalo" onclick="abrirRegalo()">
     <div class="caja-regalo">🎁</div>
     <div class="texto-regalo">TOCA PARA ABRIR TU DETALLE</div>
   </div>
@@ -739,39 +736,37 @@ def inicio():
   const playlist = [
     {
       titulo: "Con mucho amor para ti",
-      audio: encodeURI("/canción5.mp3"),
+      audio: "/canción5.mp3",
       portada: "/portada5.png"
     },
     {
       titulo: "Hecha Pa' Mí",
-      audio: encodeURI("/cancion.mp3"),
+      audio: "/cancion.mp3",
       portada: "/portada.png"
     },
     {
       titulo: "Kid Krow",
-      audio: encodeURI("/cancion2.mp3"),
+      audio: "/cancion2.mp3",
       portada: "/portada2.png"
     },
     {
       titulo: "Am I Sinking or Am I Swimming?",
-      audio: encodeURI("/cancion3.mp3"),
+      audio: "/cancion3.mp3",
       portada: "/portada3.png"
     },
     {
       titulo: "Wannabewithu",
-      audio: encodeURI("/canción4.mp3"),
+      audio: "/canción4.mp3",
       portada: "/portada4.png"
     },
     {
       titulo: "Canción 6",
-      audio: encodeURI("/cancion6.mp3"),
+      audio: "/cancion6.mp3",
       portada: "/portada6.png"
     }
   ];
 
   let indiceActual = 0;
-  let reproduccionSolicitada = false;
-  let listenerListoRegistrado = false;
 
   const audio = document.getElementById("audioPrincipal");
   const botonPlay = document.getElementById("botonPlay");
@@ -793,47 +788,22 @@ def inicio():
     return minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
   }
 
-  function intentarReproducir() {
-    reproduccionSolicitada = true;
-    var promesa = audio.play();
-    if (promesa && typeof promesa.catch === "function") {
-      promesa.catch(function () {
-        if (!listenerListoRegistrado) {
-          listenerListoRegistrado = true;
-          function alEstarListo() {
-            listenerListoRegistrado = false;
-            audio.removeEventListener("canplay", alEstarListo);
-            audio.removeEventListener("loadeddata", alEstarListo);
-            if (reproduccionSolicitada && audio.paused) {
-              audio.play().catch(function () {});
-            }
-          }
-          audio.addEventListener("canplay", alEstarListo);
-          audio.addEventListener("loadeddata", alEstarListo);
-        }
-      });
-    }
-
-    function cargarCancion(indice, reproducir) {
+  function cargarCancion(indice, reproducir) {
     if (indice < 0) indice = playlist.length - 1;
     if (indice >= playlist.length) indice = 0;
     indiceActual = indice;
-    listenerListoRegistrado = false;
 
     const tema = playlist[indiceActual];
     tituloCancion.textContent = tema.titulo;
     portadaImg.style.display = "block";
     portadaImg.src = tema.portada;
     audio.src = tema.audio;
-    audio.load();
     barraRelleno.style.width = "0%";
     actualSeg.textContent = "0:00";
     totalSeg.textContent = "0:00";
 
     if (reproducir) {
-      intentarReproducir();
-    } else {
-      reproduccionSolicitada = false;
+      audio.play().catch(function () {});
     }
   }
 
@@ -842,14 +812,11 @@ def inicio():
       cargarCancion(0, true);
       return;
     }
-    intentarReproducir();
+    audio.play().catch(function () {});
   };
 
   function sincronizarBotonPlay() {
     botonPlay.textContent = audio.paused ? "▶" : "❚❚";
-    if (!audio.paused) {
-      reproduccionSolicitada = false;
-    }
   }
 
   audio.addEventListener("play", sincronizarBotonPlay);
@@ -861,19 +828,18 @@ def inicio():
       return;
     }
     if (audio.paused) {
-      intentarReproducir();
+      audio.play().catch(function () {});
     } else {
-      reproduccionSolicitada = false;
       audio.pause();
     }
   });
 
   btnAnterior.addEventListener("click", function () {
-    cargarCancion(indiceActual - 1, !audio.paused || reproduccionSolicitada);
+    cargarCancion(indiceActual - 1, !audio.paused);
   });
 
   btnSiguiente.addEventListener("click", function () {
-    cargarCancion(indiceActual + 1, !audio.paused || reproduccionSolicitada);
+    cargarCancion(indiceActual + 1, !audio.paused);
   });
 
   audio.addEventListener("loadedmetadata", function () {
